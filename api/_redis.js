@@ -31,6 +31,7 @@ async function redis(cmd, args = []) {
 export const KEYS = {
   activePoll: 'qrVote:activePoll',
   questions: 'qrVote:questions',
+  settings: 'qrVote:settings',
 };
 
 function pollKeys(pollId) {
@@ -143,5 +144,24 @@ export async function setQuestions(questions) {
       ];
     })
   );
+  return sanitized;
+}
+
+export async function getSettings() {
+  const r = await redis('get', [KEYS.settings]);
+  if (!r?.result) return null;
+  try {
+    return JSON.parse(r.result);
+  } catch {
+    return null;
+  }
+}
+
+export async function setSettings(settings) {
+  const sanitized = {
+    title: String(settings?.title || ''),
+    subtitle: String(settings?.subtitle || ''),
+  };
+  await redis('set', [KEYS.settings, JSON.stringify(sanitized)]);
   return sanitized;
 }
