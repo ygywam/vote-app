@@ -132,7 +132,7 @@
         const qr = qrcode(4, 'M');
         qr.addData(voteUrl);
         qr.make();
-        $('qrcode').innerHTML = qr.createSvgTag({cellSize:9, margin:1});
+        $('qrcode').innerHTML = qr.createSvgTag(9, 1);
       } catch {
         $('qrcode').textContent = 'QR 생성 실패';
       }
