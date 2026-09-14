@@ -576,17 +576,14 @@
       // set hash
       if(location.hash !== `#${slideIdx+1}`) history.replaceState(null,'',`#${slideIdx+1}`);
 
-      // activate poll on server
-      const adminCode = $('adminCode').value || '';
-      if(adminCode){
-        try{
-          await fetch('/api/activate', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ adminCode, pollId: q.pollId, label1: q.label1, label2: q.label2 })
-          });
-        } catch {}
-      }
+      // activate poll on server (no admin code required)
+      try{
+        await fetch('/api/active', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ pollId: q.pollId })
+        });
+      } catch {}
 
       await fetchState();
     }
