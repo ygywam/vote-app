@@ -3,63 +3,229 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>실시간 투표 화면 (슬라이드)</title>
+  <title>청학고등학교 AI 리터러시 연수</title>
   <style>
     :root{
-      --bg:#fff; --surface:#F9F8F7; --border:#E6E5E3; --text:#2C2C2B; --muted:#7D7A75; --blue:#2783DE;
+      --bg:#ffffff;
+      --surface:#F9F8F7;
+      --surface2:#F0EFED;
+      --border:#E6E5E3;
+      --text:#2C2C2B;
+      --muted:#7D7A75;
+      --blue:#2783DE;
+      --green:#46A171;
+      --red:#E56458;
+      --radius:16px;
     }
     @media (prefers-color-scheme: dark){
-      :root{--bg:#191919; --surface:#202020; --border:rgba(255,255,255,.20); --text:#fff; --muted:rgba(255,255,255,.65); --blue:#5E9FE8;}
+      :root{
+        --bg:#191919;
+        --surface:#202020;
+        --surface2:#2A2A2A;
+        --border:rgba(255,255,255,.20);
+        --text:#ffffff;
+        --muted:rgba(255,255,255,.65);
+        --blue:#5E9FE8;
+        --green:#72BC8F;
+        --red:#E97366;
+      }
     }
+
     html,body{height:100%;}
-    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
-      background:var(--bg); color:var(--text);
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+      overflow:hidden;
     }
-    .wrap{height:100%; display:grid; grid-template-columns: 1fr 420px; gap:24px; padding:28px; box-sizing:border-box;}
-    .card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px;}
-    .top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
-    .title{font-size:20px; font-weight:700; margin:0;}
-    .muted{color:var(--muted);}
 
-    .stage{display:flex; align-items:center; justify-content:center; height:calc(100% - 84px);}
-    .numbers{width:min(980px, 100%); display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:center;}
+    .app{
+      height:100%;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:24px;
+      padding:28px;
+      box-sizing:border-box;
+      min-height:0;
+    }
 
-    .numBox{position:relative; border:1px solid var(--border); border-radius:24px; padding:18px; height:420px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden;}
-    .numLabel{position:absolute; top:14px; left:14px; font-size:18px; font-weight:700; color:var(--text); max-width: calc(100% - 28px);}
-    .count{position:absolute; bottom:14px; left:14px; font-size:20px; color:var(--text);}
-    .count b{font-size:24px;}
+    .card{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+      box-sizing:border-box;
+    }
 
-    .bigNum{font-weight:800; line-height:1; letter-spacing:-0.03em; transform: translateY(10px);}
+    /* Main */
+    .main{display:flex; flex-direction:column; min-height:0;}
 
-    .side{display:flex; flex-direction:column; gap:14px;}
-    #qrcode{display:flex; justify-content:center; padding:14px;}
-    .btn{border:1px solid var(--border); background:transparent; color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;}
+    .header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      padding:6px 4px 14px;
+    }
+    .hTitle{
+      margin:0;
+      font-size:36px;
+      font-weight:850;
+      letter-spacing:-0.03em;
+      line-height:1.1;
+    }
+    .hSub{
+      margin:10px 0 0;
+      font-size:18px;
+      line-height:1.35;
+      color:var(--muted);
+    }
+
+    .status{
+      text-align:right;
+      font-size:14px;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:#bbb;display:inline-block;}
+    .dot.ok{background:var(--green);} .dot.bad{background:var(--red);}
+
+    .stage{
+      flex:1;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 0 0;
+    }
+
+    .numbers{
+      width:min(1060px, 100%);
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:24px;
+      align-items:stretch;
+    }
+
+    .numBox{
+      position:relative;
+      border:1px solid var(--border);
+      border-radius:24px;
+      background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 65%, transparent), transparent);
+      height:520px;
+      overflow:hidden;
+    }
+
+    .numLabel{
+      position:absolute;
+      top:16px;
+      left:16px;
+      right:16px;
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:-0.02em;
+      line-height:1.2;
+      color:var(--text);
+    }
+
+    .count{
+      position:absolute;
+      bottom:16px;
+      left:16px;
+      font-size:20px;
+      color:var(--muted);
+    }
+    .count b{color:var(--text); font-size:26px;}
+
+    .bigNum{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      letter-spacing:-0.05em;
+      line-height:1;
+      transform: translateY(10px);
+    }
+
+    /* Side */
+    .side{display:flex; flex-direction:column; gap:14px; overflow:auto; padding-right:2px;}
+    .sectionTitle{margin:0 0 10px; font-weight:900; letter-spacing:-0.01em;}
+    .small{font-size:13px; color:var(--muted); line-height:1.45;}
+
+    .input, .textarea{
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--text);
+      font-size:14px;
+      outline:none;
+    }
+    .textarea{min-height:120px; resize:vertical;}
+
+    .btn{
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .btn.primary{border-color: color-mix(in srgb, var(--blue) 55%, var(--border)); background: color-mix(in srgb, var(--blue) 10%, transparent);}
+    .btn.danger{border-color: color-mix(in srgb, var(--red) 45%, var(--border));}
     .btn:focus{outline:3px solid color-mix(in srgb, var(--blue) 35%, transparent); outline-offset:2px;}
-    .input{width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--text);}
 
-    .statusDot{display:inline-block; width:10px; height:10px; border-radius:999px; background:#bbb; margin-right:8px;}
-    .ok{background: #46A171;}
-    .bad{background: #E56458;}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .row2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
 
-    .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:13px;}
+    .qItem{
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+    }
+    .qTop{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+    .qId{font-weight:900; letter-spacing:-0.01em;}
+    .qActions{display:flex; gap:8px;}
 
-    @media (max-width: 980px){
-      .wrap{grid-template-columns: 1fr;}
-      .numBox{height:320px;}
+    @media (max-width: 1100px){
+      body{overflow:auto;}
+      .app{grid-template-columns:1fr;}
+      .numBox{height:420px;}
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <main class="card" style="display:flex; flex-direction:column;">
-      <div class="top">
+  <div class="app">
+
+    <main class="main card">
+      <div class="header">
         <div>
-          <p class="title" style="margin:0;">실시간 투표 (슬라이드)</p>
-          <p class="muted" style="margin:6px 0 0;">학생 화면은 고정(1/2). 프로젝터에서 질문만 넘깁니다.</p>
+          <h1 class="hTitle" id="headerTitle">청학고등학교 AI 리터러시 연수</h1>
+          <p class="hSub" id="headerSubtitle">교육활동에서 올바른 AI 사용법</p>
         </div>
-        <div class="muted" style="font-size:14px; text-align:right;">
-          <span class="statusDot" id="dot"></span><span id="conn">불러오는 중…</span><br>
-          <span class="pill" id="pollBadge">poll</span>
+        <div class="status">
+          <div><span class="dot" id="dot"></span> <span id="conn">불러오는 중…</span></div>
+          <div class="pill" id="pollBadge">q1 (1/1)</div>
         </div>
       </div>
 
@@ -81,77 +247,96 @@
 
     <aside class="side">
       <div class="card">
-        <p style="margin:0 0 8px; font-weight:700;">QR 코드 (학생용)</p>
-        <div id="qrcode" style="display:flex; justify-content:center; padding:14px;">
-          <!-- 아래 파일을 public/qr.png로 올려두면 됩니다 -->
-          <img src="/qr.png" alt="학생용 QR" style="width:280px; height:280px; border-radius:12px;" />
+        <p class="sectionTitle">QR 코드 (학생용)</p>
+        <div style="display:flex; justify-content:center; padding:12px;">
+          <img src="/qr.png" alt="학생용 QR" style="width:280px; height:280px; border-radius:12px; background:#fff;" />
         </div>
-        <p class="muted" style="margin:10px 0 0; font-size:14px;">학생용 주소: <span id="voteUrlText"></span></p>
+        <p class="small" style="margin:10px 0 0;">학생용 주소: <span id="voteUrlText"></span></p>
       </div>
 
       <div class="card">
-        <p style="margin:0 0 10px; font-weight:700;">슬라이드 컨트롤</p>
-        <div style="display:flex; gap:10px;">
+        <p class="sectionTitle">진행</p>
+        <div class="row">
           <button class="btn" id="prevBtn">← 이전</button>
-          <button class="btn" id="nextBtn">다음 →</button>
+          <button class="btn primary" id="nextBtn">다음 →</button>
         </div>
-        <p class="muted" style="margin:10px 0 0; font-size:13px;">단축키: ←/→, Space</p>
-        <div style="height:10px;"></div>
-        <p style="margin:0 0 8px; font-weight:700;">관리 코드</p>
-        <input class="input" id="adminCode" placeholder="ADMIN_CODE (또는 RESET_CODE)" />
-        <p class="muted" style="margin:10px 0 0; font-size:13px;">질문 전환 시 서버에 활성 poll을 지정합니다.</p>
+        <p class="small" style="margin:10px 0 0;">단축키: ←/→, Space</p>
       </div>
 
       <div class="card">
-        <p style="margin:0 0 10px; font-weight:700;">질문 편집(서버 저장)</p>
-        <p class="muted" style="margin:0 0 10px; font-size:13px; line-height:1.5;">관리 코드를 입력한 뒤 저장하면, 다른 PC에서도 동일한 질문 목록이 로드됩니다.</p>
-        <textarea class="input" id="questionsJson" rows="10" style="resize:vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:12px; line-height:1.45;" placeholder='[{"pollId":"q1","label1":"...","label2":"..."}]'></textarea>
-        <div style="height:10px;"></div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn" id="loadQuestionsBtn">서버에서 불러오기</button>
-          <button class="btn" id="saveQuestionsBtn">서버에 저장</button>
-        </div>
-        <p class="muted" id="questionsStatus" style="margin:10px 0 0; font-size:13px;"></p>
+        <p class="sectionTitle">관리</p>
+        <input class="input" id="adminCode" placeholder="관리 코드" />
+        <p class="small" style="margin:10px 0 0;">질문/헤더 저장 및 질문 전환에 필요합니다.</p>
       </div>
 
       <div class="card">
-        <p style="margin:0 0 10px; font-weight:700;">진행 도구</p>
-        <button class="btn" id="resetBtn">현재 질문 카운트 초기화</button>
+        <p class="sectionTitle">헤더 편집</p>
+        <div class="row2">
+          <input class="input" id="titleInput" placeholder="제목" />
+          <input class="input" id="subtitleInput" placeholder="부제" />
+        </div>
+        <div style="height:10px;"></div>
+        <div class="row">
+          <button class="btn" id="loadSettingsBtn">불러오기</button>
+          <button class="btn primary" id="saveSettingsBtn">저장</button>
+        </div>
+        <p class="small" id="settingsStatus" style="margin:10px 0 0;"></p>
+      </div>
+
+      <div class="card">
+        <p class="sectionTitle">질문 편집</p>
+        <p class="small" style="margin:0 0 12px;">각 질문은 (선택1 문구 / 선택2 문구)로 구성됩니다. 저장하면 다른 PC에서도 동일하게 로드됩니다.</p>
+
+        <div id="questionsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+        <div style="height:12px;"></div>
+        <div class="row">
+          <button class="btn" id="addQuestionBtn">+ 질문 추가</button>
+          <button class="btn" id="loadQuestionsBtn">불러오기</button>
+          <button class="btn primary" id="saveQuestionsBtn">저장</button>
+        </div>
+        <p class="small" id="questionsStatus" style="margin:10px 0 0;"></p>
+      </div>
+
+      <div class="card">
+        <p class="sectionTitle">집계 초기화</p>
+        <button class="btn danger" id="resetBtn">현재 질문 카운트 초기화</button>
         <div style="height:10px;"></div>
         <input class="input" id="resetCode" placeholder="RESET_CODE" />
+        <p class="small" style="margin:10px 0 0;">현재 슬라이드(질문) 집계만 0으로 초기화됩니다.</p>
       </div>
 
-      <div class="card">
-        <p style="margin:0; font-weight:700;">질문 목록(편집 위치)</p>
-        <p class="muted" style="margin:8px 0 0; font-size:13px; line-height:1.5;">
-          기본값은 <b>screen.html</b>의 <code>QUESTIONS</code>이며, 서버에 저장된 질문이 있으면 그 값을 우선 사용합니다.
-        </p>
-      </div>
     </aside>
   </div>
 
   <script>
-    function $(id){return document.getElementById(id)}
+    const $ = (id) => document.getElementById(id);
 
-    // ====== 질문(슬라이드) 사전 세팅 ======
-    // 기본값(서버에 저장된 질문이 없을 때만 사용)
+    // ------- state -------
     let QUESTIONS = [
       { pollId: 'q1', label1: '선택 1', label2: '선택 2' },
-      { pollId: 'q2', label1: '선택 1', label2: '선택 2' },
-      { pollId: 'q3', label1: '선택 1', label2: '선택 2' },
     ];
+    let slideIdx = 0;
 
-    // 표시/크기
+    function setConn(ok, text){
+      $('conn').textContent = text;
+      const d = $('dot');
+      d.classList.toggle('ok', ok);
+      d.classList.toggle('bad', !ok);
+    }
+
+    function clamp(n,min,max){return Math.max(min, Math.min(max, n));}
+
     function computeFontSize(count, maxCount){
-      const base = 140;
-      const max = 380;
+      const base = 150;
+      const max = 420;
       const c = Math.max(0, count);
       const m = Math.max(1, maxCount);
       const t = Math.log10(1 + c) / Math.log10(1 + m);
       return base + (max - base) * (isFinite(t) ? t : 0);
     }
 
-    function render(counts){
+    function renderCounts(counts){
       const one = counts.one ?? 0;
       const two = counts.two ?? 0;
       const m = Math.max(one, two, 1);
@@ -161,19 +346,250 @@
       $('n2').style.fontSize = computeFontSize(two, m) + 'px';
     }
 
-    function setConn(ok, text){
-      $('conn').textContent = text;
-      $('dot').classList.toggle('ok', ok);
-      $('dot').classList.toggle('bad', !ok);
-    }
-
-    // 학생용 URL 표시
+    // Student URL
     const voteUrl = `${location.origin.replace(/\/$/, '')}/vote.html`;
     $('voteUrlText').textContent = voteUrl;
 
-    // 슬라이드 상태
-    function clamp(n,min,max){return Math.max(min, Math.min(max, n));}
-    let slideIdx = 0;
+    // ------- Questions editor UI -------
+    function makePollId(i){
+      return `q${i+1}`;
+    }
+
+    function normalizeQuestions(arr){
+      const out = (Array.isArray(arr) ? arr : [])
+        .map((q, idx) => ({
+          pollId: String(q?.pollId || makePollId(idx)).trim() || makePollId(idx),
+          label1: String(q?.label1 || '').trim(),
+          label2: String(q?.label2 || '').trim(),
+        }))
+        .filter((q) => q.pollId);
+
+      // Ensure unique pollId
+      const used = new Set();
+      for (let i=0;i<out.length;i++){
+        let id = out[i].pollId;
+        if (used.has(id)){
+          let k = 2;
+          while (used.has(`${id}-${k}`)) k++;
+          id = `${id}-${k}`;
+        }
+        used.add(id);
+        out[i].pollId = id;
+      }
+      return out.slice(0, 50);
+    }
+
+    function renderQuestionsEditor(){
+      const root = $('questionsList');
+      root.innerHTML = '';
+
+      QUESTIONS.forEach((q, idx) => {
+        const item = document.createElement('div');
+        item.className = 'qItem';
+
+        const top = document.createElement('div');
+        top.className = 'qTop';
+
+        const left = document.createElement('div');
+        left.innerHTML = `<div class="qId">질문 ${idx+1}</div><div class="small">pollId: <b>${q.pollId}</b></div>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'qActions';
+
+        const up = document.createElement('button');
+        up.className = 'btn';
+        up.textContent = '↑';
+        up.title = '위로';
+        up.disabled = idx === 0;
+        up.addEventListener('click', () => {
+          const tmp = QUESTIONS[idx-1];
+          QUESTIONS[idx-1] = QUESTIONS[idx];
+          QUESTIONS[idx] = tmp;
+          renderQuestionsEditor();
+        });
+
+        const down = document.createElement('button');
+        down.className = 'btn';
+        down.textContent = '↓';
+        down.title = '아래로';
+        down.disabled = idx === QUESTIONS.length-1;
+        down.addEventListener('click', () => {
+          const tmp = QUESTIONS[idx+1];
+          QUESTIONS[idx+1] = QUESTIONS[idx];
+          QUESTIONS[idx] = tmp;
+          renderQuestionsEditor();
+        });
+
+        const del = document.createElement('button');
+        del.className = 'btn danger';
+        del.textContent = '삭제';
+        del.addEventListener('click', () => {
+          if (QUESTIONS.length <= 1) return;
+          QUESTIONS.splice(idx, 1);
+          slideIdx = clamp(slideIdx, 0, QUESTIONS.length-1);
+          renderQuestionsEditor();
+          activateSlide(slideIdx);
+        });
+
+        actions.appendChild(up);
+        actions.appendChild(down);
+        actions.appendChild(del);
+
+        top.appendChild(left);
+        top.appendChild(actions);
+
+        const inputs = document.createElement('div');
+        inputs.className = 'row2';
+        inputs.style.marginTop = '10px';
+
+        const in1 = document.createElement('input');
+        in1.className = 'input';
+        in1.placeholder = '선택 1 문구';
+        in1.value = q.label1;
+        in1.addEventListener('input', (e)=>{ QUESTIONS[idx].label1 = e.target.value; if(idx===slideIdx) $('label1').textContent = e.target.value || '선택 1'; });
+
+        const in2 = document.createElement('input');
+        in2.className = 'input';
+        in2.placeholder = '선택 2 문구';
+        in2.value = q.label2;
+        in2.addEventListener('input', (e)=>{ QUESTIONS[idx].label2 = e.target.value; if(idx===slideIdx) $('label2').textContent = e.target.value || '선택 2'; });
+
+        inputs.appendChild(in1);
+        inputs.appendChild(in2);
+
+        item.appendChild(top);
+        item.appendChild(inputs);
+        root.appendChild(item);
+      });
+    }
+
+    $('addQuestionBtn').addEventListener('click', () => {
+      const nextId = makePollId(QUESTIONS.length);
+      QUESTIONS.push({ pollId: nextId, label1: '선택 1', label2: '선택 2' });
+      renderQuestionsEditor();
+      $('questionsStatus').textContent = '';
+    });
+
+    // ------- API calls -------
+    async function apiJson(url, options){
+      const r = await fetch(url, { cache: 'no-store', ...(options||{}) });
+      const j = await r.json().catch(()=>null);
+      return { r, j };
+    }
+
+    async function loadSettings(){
+      const { j } = await apiJson(`/api/settings?ts=${Date.now()}`);
+      if(j && j.ok && j.settings){
+        const t = j.settings.title || '청학고등학교 AI 리터러시 연수';
+        const s = j.settings.subtitle || '교육활동에서 올바른 AI 사용법';
+        $('headerTitle').textContent = t;
+        $('headerSubtitle').textContent = s;
+        $('titleInput').value = t;
+        $('subtitleInput').value = s;
+        $('settingsStatus').textContent = '불러오기 완료';
+        return;
+      }
+      // default
+      const t = '청학고등학교 AI 리터러시 연수';
+      const s = '교육활동에서 올바른 AI 사용법';
+      $('headerTitle').textContent = t;
+      $('headerSubtitle').textContent = s;
+      $('titleInput').value = t;
+      $('subtitleInput').value = s;
+      $('settingsStatus').textContent = '저장된 설정이 없어 기본값을 사용합니다.';
+    }
+
+    $('loadSettingsBtn').addEventListener('click', loadSettings);
+
+    $('saveSettingsBtn').addEventListener('click', async ()=>{
+      const adminCode = $('adminCode').value || '';
+      if(!adminCode){ $('settingsStatus').textContent = '관리 코드를 먼저 입력하세요.'; return; }
+
+      const title = ($('titleInput').value || '').trim();
+      const subtitle = ($('subtitleInput').value || '').trim();
+      const { j } = await apiJson('/api/settings', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ adminCode, title, subtitle })
+      });
+      if(j && j.ok){
+        $('headerTitle').textContent = j.settings.title || title;
+        $('headerSubtitle').textContent = j.settings.subtitle || subtitle;
+        $('settingsStatus').textContent = '저장 완료';
+      } else {
+        $('settingsStatus').textContent = `저장 실패: ${j && j.error ? j.error : 'error'}`;
+      }
+    });
+
+    async function loadQuestions(){
+      const { j } = await apiJson(`/api/questions?ts=${Date.now()}`);
+      if(j && j.ok && Array.isArray(j.questions) && j.questions.length){
+        QUESTIONS = normalizeQuestions(j.questions);
+        renderQuestionsEditor();
+        slideIdx = clamp(slideIdx, 0, QUESTIONS.length-1);
+        $('questionsStatus').textContent = `불러오기 완료: ${QUESTIONS.length}개`;
+        await activateSlide(slideIdx);
+        return;
+      }
+      QUESTIONS = normalizeQuestions(QUESTIONS);
+      renderQuestionsEditor();
+      $('questionsStatus').textContent = '저장된 질문이 없어 기본값을 사용합니다.';
+    }
+
+    $('loadQuestionsBtn').addEventListener('click', loadQuestions);
+
+    $('saveQuestionsBtn').addEventListener('click', async ()=>{
+      const adminCode = $('adminCode').value || '';
+      if(!adminCode){ $('questionsStatus').textContent = '관리 코드를 먼저 입력하세요.'; return; }
+
+      const payload = normalizeQuestions(QUESTIONS).map((q, idx) => ({
+        pollId: q.pollId || makePollId(idx),
+        label1: q.label1,
+        label2: q.label2,
+      }));
+
+      const { j } = await apiJson('/api/questions', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ adminCode, questions: payload })
+      });
+
+      if(j && j.ok){
+        QUESTIONS = normalizeQuestions(j.questions || payload);
+        renderQuestionsEditor();
+        $('questionsStatus').textContent = `저장 완료: ${QUESTIONS.length}개`;
+        slideIdx = clamp(slideIdx, 0, QUESTIONS.length-1);
+        await activateSlide(slideIdx);
+      } else {
+        $('questionsStatus').textContent = `저장 실패: ${j && j.error ? j.error : 'error'}`;
+      }
+    });
+
+    // ------- Slide activation -------
+    async function activateSlide(i){
+      slideIdx = clamp(i, 0, QUESTIONS.length-1);
+      const q = QUESTIONS[slideIdx];
+      $('label1').textContent = (q.label1 || '선택 1');
+      $('label2').textContent = (q.label2 || '선택 2');
+      $('pollBadge').textContent = `${q.pollId} (${slideIdx+1}/${QUESTIONS.length})`;
+
+      // set hash
+      if(location.hash !== `#${slideIdx+1}`) history.replaceState(null,'',`#${slideIdx+1}`);
+
+      // activate poll on server
+      const adminCode = $('adminCode').value || '';
+      if(adminCode){
+        try{
+          await fetch('/api/activate', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ adminCode, pollId: q.pollId, label1: q.label1, label2: q.label2 })
+          });
+        } catch {}
+      }
+
+      await fetchState();
+    }
 
     function readIdxFromHash(){
       const m = (location.hash||'').match(/#(\d+)/);
@@ -183,46 +599,14 @@
       return clamp(n-1, 0, QUESTIONS.length-1);
     }
 
-    async function activateSlide(i){
-      slideIdx = clamp(i, 0, QUESTIONS.length-1);
-      const q = QUESTIONS[slideIdx];
-
-      // UI
-      $('label1').textContent = q.label1;
-      $('label2').textContent = q.label2;
-      $('pollBadge').textContent = `${q.pollId} (${slideIdx+1}/${QUESTIONS.length})`;
-      if(location.hash !== `#${slideIdx+1}`) history.replaceState(null,'',`#${slideIdx+1}`);
-
-      // 서버에 활성 질문(poll) 지정
-      const adminCode = $('adminCode').value || '';
-      if(adminCode){
-        try{
-          await fetch('/api/activate', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({
-              adminCode,
-              pollId: q.pollId,
-              label1: q.label1,
-              label2: q.label2,
-            })
-          });
-        } catch {}
-      }
-
-      // 화면 카운트 로드
-      await fetchState();
-    }
-
-    // Polling: 현재 슬라이드 pollId로 state를 읽어옴
+    // Polling
     const intervalMs = 1200;
     async function fetchState(){
       try{
         const q = QUESTIONS[slideIdx];
-        const r = await fetch(`/api/state?pollId=${encodeURIComponent(q.pollId)}&ts=${Date.now()}`, { cache: 'no-store' });
-        const j = await r.json();
+        const { j } = await apiJson(`/api/state?pollId=${encodeURIComponent(q.pollId)}&ts=${Date.now()}`);
         if(j && j.ok){
-          render(j.counts);
+          renderCounts(j.counts);
           setConn(true, '연결됨');
         } else {
           setConn(false, '오류');
@@ -245,7 +629,7 @@
       if(e.key === 'End'){ e.preventDefault(); activateSlide(QUESTIONS.length-1); }
     });
 
-    // Reset (현재 질문)
+    // Reset current poll
     $('resetBtn').addEventListener('click', async ()=>{
       const code = $('resetCode').value || '';
       try{
@@ -259,76 +643,13 @@
     });
 
     // Init
-    async function loadQuestionsFromServer(){
-      try{
-        const r = await fetch(`/api/questions?ts=${Date.now()}`, { cache: 'no-store' });
-        const j = await r.json();
-        if(j && j.ok && Array.isArray(j.questions) && j.questions.length){
-          QUESTIONS = j.questions;
-          $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
-          $('questionsStatus').textContent = `서버 질문 ${QUESTIONS.length}개 로드됨`;
-          $('questionsStatus').style.color = '';
-          return true;
-        }
-        $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
-        $('questionsStatus').textContent = '서버에 저장된 질문이 없어 기본값을 사용합니다.';
-        $('questionsStatus').style.color = '';
-        return false;
-      } catch {
-        $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
-        $('questionsStatus').textContent = '서버 질문 로드 실패(기본값 사용)';
-        $('questionsStatus').style.color = '';
-        return false;
-      }
-    }
-
-    $('loadQuestionsBtn').addEventListener('click', loadQuestionsFromServer);
-
-    $('saveQuestionsBtn').addEventListener('click', async ()=>{
-      const adminCode = $('adminCode').value || '';
-      if(!adminCode){
-        $('questionsStatus').textContent = '관리 코드를 먼저 입력하세요.';
-        $('questionsStatus').style.color = '#E56458';
-        return;
-      }
-      let arr;
-      try{
-        arr = JSON.parse($('questionsJson').value || '[]');
-      } catch {
-        $('questionsStatus').textContent = 'JSON 파싱 실패: 형식을 확인하세요.';
-        $('questionsStatus').style.color = '#E56458';
-        return;
-      }
-
-      try{
-        const r = await fetch('/api/questions', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ adminCode, questions: arr })
-        });
-        const j = await r.json();
-        if(j && j.ok){
-          QUESTIONS = j.questions || QUESTIONS;
-          $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
-          $('questionsStatus').textContent = `저장 완료: ${QUESTIONS.length}개`;
-          $('questionsStatus').style.color = '#46A171';
-          // 저장 직후 첫 질문부터 반영
-          slideIdx = clamp(slideIdx, 0, QUESTIONS.length-1);
-          await activateSlide(slideIdx);
-        } else {
-          $('questionsStatus').textContent = `저장 실패: ${j && j.error ? j.error : 'error'}`;
-          $('questionsStatus').style.color = '#E56458';
-        }
-      } catch {
-        $('questionsStatus').textContent = '저장 실패(네트워크)';
-        $('questionsStatus').style.color = '#E56458';
-      }
-    });
-
     (async function init(){
-      await loadQuestionsFromServer();
+      // load server-saved content
+      await loadSettings();
+      await loadQuestions();
+      renderQuestionsEditor();
       slideIdx = readIdxFromHash();
-      activateSlide(slideIdx);
+      await activateSlide(slideIdx);
     })();
   </script>
 </body>
