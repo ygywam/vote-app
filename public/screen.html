@@ -79,8 +79,12 @@
     <aside class="side">
       <div class="card">
         <p style="margin:0 0 8px; font-weight:700;">QR 코드 (학생용)</p>
-        <div id="qrcode"></div>
-        <p class="muted" style="margin:10px 0 0; font-size:14px;">학생용 주소: <span id="voteUrlText"></span></p>
+        <div id="qrcode" style="display:flex; justify-content:center; padding:14px;">
+  <img src="/qr.png" alt="학생용 QR" style="width:280px; height:280px; border-radius:12px;" />
+</div>
+<p class="muted" style="margin:10px 0 0; font-size:14px;">
+  학생용 주소: https://vote-app-lemon.vercel.app/vote.html
+</p>
       </div>
 
       <div class="card">
@@ -123,14 +127,7 @@
       $('n2').style.fontSize = computeFontSize(two, m) + 'px';
     }
 
-    <!-- QR -->
-<div id="qrcode" style="display:flex; justify-content:center; padding:14px;">
-  <img src="/qr.png" alt="학생용 QR" style="width:280px; height:280px; border-radius:12px;" />
-</div>
-<p class="muted" style="margin:10px 0 0; font-size:14px;">
-  학생용 주소: https://vote-app-lemon.vercel.app/vote.html
-</p>
-
+    
     // Polling
     const intervalMs = 1200;
     $('pollText').textContent = `갱신 주기: ${intervalMs}ms`;
