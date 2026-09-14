@@ -1,4 +1,4 @@
-import { incr } from './_redis.js';
+import { getActivePollId, incr } from './_redis.js';
 
 export default async function handler(req, res) {
   try {
@@ -13,9 +13,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    const counts = await incr(choice);
+    const pollId = await getActivePollId();
+    const counts = await incr(choice, pollId);
     res.setHeader('Cache-Control', 'no-store');
-    res.status(200).json({ ok: true, counts });
+    res.status(200).json({ ok: true, pollId, counts });
   } catch (e) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(e.statusCode || 500).json({ ok: false, error: e.message || 'error' });
