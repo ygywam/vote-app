@@ -46,8 +46,8 @@ function pollKeys(pollId) {
 
 export async function getActivePollId() {
   const r = await redis('get', [KEYS.activePoll]);
-  const v = String(r?.result || 'poll1');
-  return v || 'poll1';
+  const v = String(r?.result || 'q1');
+  return v || 'q1';
 }
 
 export async function getCounts() {

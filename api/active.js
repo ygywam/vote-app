@@ -1,5 +1,8 @@
 import { setActivePoll } from './_redis.js';
 
+// Public endpoint: sets only the active poll id (no auth).
+// This is used so the projector can switch questions without needing to type
+// an admin code during the session.
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -7,21 +10,17 @@ export default async function handler(req, res) {
       return;
     }
 
-    const expected = process.env.ADMIN_CODE || process.env.RESET_CODE || 'reset';
-    const { adminCode, pollId, label1, label2 } = req.body || {};
-
+    const { pollId } = req.body || {};
     if (!pollId) {
       res.status(400).json({ ok: false, error: 'pollId required' });
       return;
     }
 
-    // If adminCode is provided and matches, also save labels. Otherwise, only
-    // switch active poll.
-    const canWriteLabels = adminCode && String(adminCode) === String(expected);
-    const out = await setActivePoll(String(pollId), canWriteLabels ? { label1, label2 } : null);
+    // No labels written here.
+    const out = await setActivePoll(String(pollId), null);
 
     res.setHeader('Cache-Control', 'no-store');
-    res.status(200).json({ ok: true, wroteLabels: !!canWriteLabels, ...out });
+    res.status(200).json({ ok: true, ...out });
   } catch (e) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(e.statusCode || 500).json({ ok: false, error: e.message || 'error' });
