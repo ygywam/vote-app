@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>실시간 투표 화면</title>
+  <style>
+    :root{
+      --bg:#fff; --surface:#F9F8F7; --border:#E6E5E3; --text:#2C2C2B; --muted:#7D7A75; --blue:#2783DE;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{--bg:#191919; --surface:#202020; --border:rgba(255,255,255,.20); --text:#fff; --muted:rgba(255,255,255,.65); --blue:#5E9FE8;}
+    }
+    html,body{height:100%;}
+    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    .wrap{height:100%; display:grid; grid-template-columns: 1fr 420px; gap:24px; padding:28px; box-sizing:border-box;}
+    .card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px;}
+    .top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
+    .title{font-size:20px; font-weight:700; margin:0;}
+    .muted{color:var(--muted);}
+
+    .stage{display:flex; align-items:center; justify-content:center; height:calc(100% - 84px);}
+    .numbers{width:min(980px, 100%); display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:center;}
+
+    .numBox{position:relative; border:1px solid var(--border); border-radius:24px; padding:18px; height:420px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden;}
+    .numLabel{position:absolute; top:14px; left:14px; font-size:14px; color:var(--muted);}
+    .count{position:absolute; bottom:14px; left:14px; font-size:14px; color:var(--muted);}
+
+    .bigNum{font-weight:800; line-height:1; letter-spacing:-0.03em; transform: translateY(10px);}
+
+    .side{display:flex; flex-direction:column; gap:14px;}
+    #qrcode{display:flex; justify-content:center; padding:14px;}
+    .btn{border:1px solid var(--border); background:transparent; color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer;}
+    .btn:focus{outline:3px solid color-mix(in srgb, var(--blue) 35%, transparent); outline-offset:2px;}
+    .input{width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:transparent; color:var(--text);}
+
+    .statusDot{display:inline-block; width:10px; height:10px; border-radius:999px; background:#bbb; margin-right:8px;}
+    .ok{background: #46A171;}
+    .bad{background: #E56458;}
+
+    @media (max-width: 980px){
+      .wrap{grid-template-columns: 1fr;}
+      .numBox{height:320px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card" style="display:flex; flex-direction:column;">
+      <div class="top">
+        <div>
+          <p class="title" style="margin:0;">실시간 투표</p>
+          <p class="muted" style="margin:6px 0 0;">학생은 QR로 접속해서 1 또는 2를 선택합니다.</p>
+        </div>
+        <div class="muted" style="font-size:14px; text-align:right;">
+          <span class="statusDot" id="dot"></span><span id="conn">불러오는 중…</span><br>
+          <span class="muted" id="pollText"></span>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="numbers">
+          <div class="numBox">
+            <div class="numLabel">선택 1</div>
+            <div class="bigNum" id="n1">1</div>
+            <div class="count">누적: <b id="c1">0</b></div>
+          </div>
+          <div class="numBox">
+            <div class="numLabel">선택 2</div>
+            <div class="bigNum" id="n2">2</div>
+            <div class="count">누적: <b id="c2">0</b></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="side">
+      <div class="card">
+        <p style="margin:0 0 8px; font-weight:700;">QR 코드 (학생용)</p>
+        <div id="qrcode"></div>
+        <p class="muted" style="margin:10px 0 0; font-size:14px;">학생용 주소: <span id="voteUrlText"></span></p>
+      </div>
+
+      <div class="card">
+        <p style="margin:0 0 10px; font-weight:700;">진행 도구</p>
+        <button class="btn" id="resetBtn">카운트 초기화</button>
+        <div style="height:10px;"></div>
+        <input class="input" id="resetCode" placeholder="리셋 코드" value="reset" />
+        <p class="muted" style="margin:10px 0 0; font-size:13px;">리셋 코드는 Vercel 환경변수 RESET_CODE 로 변경합니다.</p>
+      </div>
+
+      <div class="card">
+        <p style="margin:0; font-weight:700;">표현 규칙</p>
+        <ul class="muted" style="margin:8px 0 0; font-size:14px; line-height:1.5; padding-left:18px;">
+          <li>표시되는 숫자의 크기 = <b>로그 스케일</b>로 완만히 증가</li>
+          <li>둘의 상대 크기로 투표 비율을 직관적으로 비교</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script src="/qrcode.min.js"></script>
+  <script>
+    function $(id){return document.getElementById(id)}
+
+    function computeFontSize(count, maxCount){
+      const base = 140;
+      const max = 380;
+      const c = Math.max(0, count);
+      const m = Math.max(1, maxCount);
+      const t = Math.log10(1 + c) / Math.log10(1 + m);
+      return base + (max - base) * (isFinite(t) ? t : 0);
+    }
+
+    function render(counts){
+      const one = counts.one ?? 0;
+      const two = counts.two ?? 0;
+      const m = Math.max(one, two, 1);
+      $('c1').textContent = one;
+      $('c2').textContent = two;
+      $('n1').style.fontSize = computeFontSize(one, m) + 'px';
+      $('n2').style.fontSize = computeFontSize(two, m) + 'px';
+    }
+
+    // QR
+    const voteUrl = `${location.origin.replace(/\/$/, '')}/vote.html`;
+    $('voteUrlText').textContent = voteUrl;
+    (function makeQr(){
+      try{
+        const qr = qrcode(4, 'M');
+        qr.addData(voteUrl);
+        qr.make();
+        $('qrcode').innerHTML = qr.createSvgTag({cellSize:9, margin:1});
+      } catch {
+        $('qrcode').textContent = 'QR 생성 실패';
+      }
+    })();
+
+    function setConn(ok, text){
+      $('conn').textContent = text;
+      $('dot').classList.toggle('ok', ok);
+      $('dot').classList.toggle('bad', !ok);
+    }
+
+    // Polling
+    const intervalMs = 1200;
+    $('pollText').textContent = `갱신 주기: ${intervalMs}ms`;
+
+    async function fetchState(){
+      try{
+        const r = await fetch(`/api/state?ts=${Date.now()}`, { cache: 'no-store' });
+        const j = await r.json();
+        if(j && j.ok){
+          render(j.counts);
+          setConn(true, '연결됨');
+        } else {
+          setConn(false, '오류');
+        }
+      } catch {
+        setConn(false, '끊김');
+      }
+    }
+
+    fetchState();
+    setInterval(fetchState, intervalMs);
+
+    $('resetBtn').addEventListener('click', async ()=>{
+      const code = $('resetCode').value || '';
+      try{
+        await fetch('/api/reset', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ code })
+        });
+      } catch {}
+    });
+  </script>
+</body>
+</html>

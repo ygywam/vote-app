@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>투표하기 (1 / 2)</title>
+  <style>
+    :root{--bg:#fff; --surface:#F9F8F7; --border:#E6E5E3; --text:#2C2C2B; --muted:#7D7A75; --blue:#2783DE;}
+    @media (prefers-color-scheme: dark){:root{--bg:#191919; --surface:#202020; --border:rgba(255,255,255,.20); --text:#fff; --muted:rgba(255,255,255,.65); --blue:#5E9FE8;}}
+    body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;
+      background:var(--bg); color:var(--text);
+    }
+    .wrap{min-height:100vh; display:flex; flex-direction:column; justify-content:center; gap:18px; padding:24px; box-sizing:border-box; max-width:720px; margin:0 auto;}
+    .card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px;}
+    h1{margin:0 0 10px; font-size:24px; letter-spacing:-0.01em;}
+    p{margin:0; color:var(--muted); line-height:1.5;}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+    button{
+      height:160px;
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--text);
+      font-size:64px;
+      font-weight:800;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+    }
+    button:active{transform: scale(0.99);}
+    button:focus{outline:3px solid color-mix(in srgb, var(--blue) 35%, transparent); outline-offset:2px;}
+    .toast{display:none; padding:10px 12px; border-radius:14px; border:1px solid var(--border); background:var(--surface); color:var(--muted); font-size:14px;}
+    .toast.show{display:block;}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .dot{width:10px; height:10px; border-radius:99px; background:#bbb; display:inline-block; margin-right:8px;}
+    .ok{background:#46A171;}
+    .bad{background:#E56458;}
+    .small{font-size:14px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <h1 style="margin:0;">투표하기</h1>
+        <div class="small" style="color:var(--muted);"><span class="dot" id="dot"></span><span id="conn">대기</span></div>
+      </div>
+      <p style="margin-top:8px;">한 번 탭하면 바로 반영됩니다. (실수하면 다시 탭해도 됩니다)</p>
+    </div>
+
+    <div class="grid">
+      <button id="b1" aria-label="1 선택">1</button>
+      <button id="b2" aria-label="2 선택">2</button>
+    </div>
+
+    <div class="toast" id="toast">전송됨</div>
+
+    <p class="small" style="color:var(--muted); text-align:center;">화면: /screen.html</p>
+  </div>
+
+  <script>
+    function $(id){return document.getElementById(id)}
+
+    let toastTimer;
+    function toast(text){
+      const el = $('toast');
+      el.textContent = text;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>el.classList.remove('show'), 900);
+    }
+
+    function setConn(ok, text){
+      $('conn').textContent = text;
+      $('dot').classList.toggle('ok', ok);
+      $('dot').classList.toggle('bad', !ok);
+    }
+
+    async function ping(){
+      try{
+        const r = await fetch(`/api/state?ts=${Date.now()}`, { cache: 'no-store' });
+        const j = await r.json();
+        if(j && j.ok) setConn(true, '연결됨');
+        else setConn(false, '오류');
+      } catch {
+        setConn(false, '끊김');
+      }
+    }
+    ping();
+
+    async function sendVote(choice){
+      try{
+        const r = await fetch('/api/vote', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ choice })
+        });
+        if(r.ok) toast(`${choice} 전송됨`);
+        else toast('전송 실패');
+      } catch {
+        toast('전송 실패(연결 확인)');
+      }
+    }
+
+    $('b1').addEventListener('click', ()=>sendVote(1));
+    $('b2').addEventListener('click', ()=>sendVote(2));
+  </script>
+</body>
+</html>
