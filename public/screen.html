@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>실시간 투표 화면</title>
+  <title>실시간 투표 화면 (슬라이드)</title>
   <style>
     :root{
       --bg:#fff; --surface:#F9F8F7; --border:#E6E5E3; --text:#2C2C2B; --muted:#7D7A75; --blue:#2783DE;
@@ -25,8 +25,9 @@
     .numbers{width:min(980px, 100%); display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:center;}
 
     .numBox{position:relative; border:1px solid var(--border); border-radius:24px; padding:18px; height:420px; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden;}
-    .numLabel{position:absolute; top:14px; left:14px; font-size:14px; color:var(--muted);}
-    .count{position:absolute; bottom:14px; left:14px; font-size:14px; color:var(--muted);}
+    .numLabel{position:absolute; top:14px; left:14px; font-size:18px; font-weight:700; color:var(--text); max-width: calc(100% - 28px);}
+    .count{position:absolute; bottom:14px; left:14px; font-size:20px; color:var(--text);}
+    .count b{font-size:24px;}
 
     .bigNum{font-weight:800; line-height:1; letter-spacing:-0.03em; transform: translateY(10px);}
 
@@ -40,6 +41,8 @@
     .ok{background: #46A171;}
     .bad{background: #E56458;}
 
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:transparent; color:var(--muted); font-size:13px;}
+
     @media (max-width: 980px){
       .wrap{grid-template-columns: 1fr;}
       .numBox{height:320px;}
@@ -51,24 +54,24 @@
     <main class="card" style="display:flex; flex-direction:column;">
       <div class="top">
         <div>
-          <p class="title" style="margin:0;">실시간 투표</p>
-          <p class="muted" style="margin:6px 0 0;">학생은 QR로 접속해서 1 또는 2를 선택합니다.</p>
+          <p class="title" style="margin:0;">실시간 투표 (슬라이드)</p>
+          <p class="muted" style="margin:6px 0 0;">학생 화면은 고정(1/2). 프로젝터에서 질문만 넘깁니다.</p>
         </div>
         <div class="muted" style="font-size:14px; text-align:right;">
           <span class="statusDot" id="dot"></span><span id="conn">불러오는 중…</span><br>
-          <span class="muted" id="pollText"></span>
+          <span class="pill" id="pollBadge">poll</span>
         </div>
       </div>
 
       <div class="stage">
         <div class="numbers">
           <div class="numBox">
-            <div class="numLabel">선택 1</div>
+            <div class="numLabel" id="label1">선택 1</div>
             <div class="bigNum" id="n1">1</div>
             <div class="count">누적: <b id="c1">0</b></div>
           </div>
           <div class="numBox">
-            <div class="numLabel">선택 2</div>
+            <div class="numLabel" id="label2">선택 2</div>
             <div class="bigNum" id="n2">2</div>
             <div class="count">누적: <b id="c2">0</b></div>
           </div>
@@ -80,27 +83,49 @@
       <div class="card">
         <p style="margin:0 0 8px; font-weight:700;">QR 코드 (학생용)</p>
         <div id="qrcode" style="display:flex; justify-content:center; padding:14px;">
-  <img src="/qr.png" alt="학생용 QR" style="width:280px; height:280px; border-radius:12px;" />
-</div>
-<p class="muted" style="margin:10px 0 0; font-size:14px;">
-  학생용 주소: https://vote-app-lemon.vercel.app/vote.html
-</p>
+          <!-- 아래 파일을 public/qr.png로 올려두면 됩니다 -->
+          <img src="/qr.png" alt="학생용 QR" style="width:280px; height:280px; border-radius:12px;" />
+        </div>
+        <p class="muted" style="margin:10px 0 0; font-size:14px;">학생용 주소: <span id="voteUrlText"></span></p>
+      </div>
+
+      <div class="card">
+        <p style="margin:0 0 10px; font-weight:700;">슬라이드 컨트롤</p>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" id="prevBtn">← 이전</button>
+          <button class="btn" id="nextBtn">다음 →</button>
+        </div>
+        <p class="muted" style="margin:10px 0 0; font-size:13px;">단축키: ←/→, Space</p>
+        <div style="height:10px;"></div>
+        <p style="margin:0 0 8px; font-weight:700;">관리 코드</p>
+        <input class="input" id="adminCode" placeholder="ADMIN_CODE (또는 RESET_CODE)" />
+        <p class="muted" style="margin:10px 0 0; font-size:13px;">질문 전환 시 서버에 활성 poll을 지정합니다.</p>
+      </div>
+
+      <div class="card">
+        <p style="margin:0 0 10px; font-weight:700;">질문 편집(서버 저장)</p>
+        <p class="muted" style="margin:0 0 10px; font-size:13px; line-height:1.5;">관리 코드를 입력한 뒤 저장하면, 다른 PC에서도 동일한 질문 목록이 로드됩니다.</p>
+        <textarea class="input" id="questionsJson" rows="10" style="resize:vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:12px; line-height:1.45;" placeholder='[{"pollId":"q1","label1":"...","label2":"..."}]'></textarea>
+        <div style="height:10px;"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn" id="loadQuestionsBtn">서버에서 불러오기</button>
+          <button class="btn" id="saveQuestionsBtn">서버에 저장</button>
+        </div>
+        <p class="muted" id="questionsStatus" style="margin:10px 0 0; font-size:13px;"></p>
       </div>
 
       <div class="card">
         <p style="margin:0 0 10px; font-weight:700;">진행 도구</p>
-        <button class="btn" id="resetBtn">카운트 초기화</button>
+        <button class="btn" id="resetBtn">현재 질문 카운트 초기화</button>
         <div style="height:10px;"></div>
-        <input class="input" id="resetCode" placeholder="리셋 코드" value="reset" />
-        <p class="muted" style="margin:10px 0 0; font-size:13px;">리셋 코드는 Vercel 환경변수 RESET_CODE 로 변경합니다.</p>
+        <input class="input" id="resetCode" placeholder="RESET_CODE" />
       </div>
 
       <div class="card">
-        <p style="margin:0; font-weight:700;">표현 규칙</p>
-        <ul class="muted" style="margin:8px 0 0; font-size:14px; line-height:1.5; padding-left:18px;">
-          <li>표시되는 숫자의 크기 = <b>로그 스케일</b>로 완만히 증가</li>
-          <li>둘의 상대 크기로 투표 비율을 직관적으로 비교</li>
-        </ul>
+        <p style="margin:0; font-weight:700;">질문 목록(편집 위치)</p>
+        <p class="muted" style="margin:8px 0 0; font-size:13px; line-height:1.5;">
+          기본값은 <b>screen.html</b>의 <code>QUESTIONS</code>이며, 서버에 저장된 질문이 있으면 그 값을 우선 사용합니다.
+        </p>
       </div>
     </aside>
   </div>
@@ -108,6 +133,15 @@
   <script>
     function $(id){return document.getElementById(id)}
 
+    // ====== 질문(슬라이드) 사전 세팅 ======
+    // 기본값(서버에 저장된 질문이 없을 때만 사용)
+    let QUESTIONS = [
+      { pollId: 'q1', label1: '선택 1', label2: '선택 2' },
+      { pollId: 'q2', label1: '선택 1', label2: '선택 2' },
+      { pollId: 'q3', label1: '선택 1', label2: '선택 2' },
+    ];
+
+    // 표시/크기
     function computeFontSize(count, maxCount){
       const base = 140;
       const max = 380;
@@ -127,14 +161,65 @@
       $('n2').style.fontSize = computeFontSize(two, m) + 'px';
     }
 
-    
-    // Polling
-    const intervalMs = 1200;
-    $('pollText').textContent = `갱신 주기: ${intervalMs}ms`;
+    function setConn(ok, text){
+      $('conn').textContent = text;
+      $('dot').classList.toggle('ok', ok);
+      $('dot').classList.toggle('bad', !ok);
+    }
 
+    // 학생용 URL 표시
+    const voteUrl = `${location.origin.replace(/\/$/, '')}/vote.html`;
+    $('voteUrlText').textContent = voteUrl;
+
+    // 슬라이드 상태
+    function clamp(n,min,max){return Math.max(min, Math.min(max, n));}
+    let slideIdx = 0;
+
+    function readIdxFromHash(){
+      const m = (location.hash||'').match(/#(\d+)/);
+      if(!m) return 0;
+      const n = parseInt(m[1], 10);
+      if(Number.isNaN(n)) return 0;
+      return clamp(n-1, 0, QUESTIONS.length-1);
+    }
+
+    async function activateSlide(i){
+      slideIdx = clamp(i, 0, QUESTIONS.length-1);
+      const q = QUESTIONS[slideIdx];
+
+      // UI
+      $('label1').textContent = q.label1;
+      $('label2').textContent = q.label2;
+      $('pollBadge').textContent = `${q.pollId} (${slideIdx+1}/${QUESTIONS.length})`;
+      if(location.hash !== `#${slideIdx+1}`) history.replaceState(null,'',`#${slideIdx+1}`);
+
+      // 서버에 활성 질문(poll) 지정
+      const adminCode = $('adminCode').value || '';
+      if(adminCode){
+        try{
+          await fetch('/api/activate', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              adminCode,
+              pollId: q.pollId,
+              label1: q.label1,
+              label2: q.label2,
+            })
+          });
+        } catch {}
+      }
+
+      // 화면 카운트 로드
+      await fetchState();
+    }
+
+    // Polling: 현재 슬라이드 pollId로 state를 읽어옴
+    const intervalMs = 1200;
     async function fetchState(){
       try{
-        const r = await fetch(`/api/state?ts=${Date.now()}`, { cache: 'no-store' });
+        const q = QUESTIONS[slideIdx];
+        const r = await fetch(`/api/state?pollId=${encodeURIComponent(q.pollId)}&ts=${Date.now()}`, { cache: 'no-store' });
         const j = await r.json();
         if(j && j.ok){
           render(j.counts);
@@ -147,9 +232,20 @@
       }
     }
 
-    fetchState();
     setInterval(fetchState, intervalMs);
 
+    // Controls
+    $('prevBtn').addEventListener('click', ()=>activateSlide(slideIdx-1));
+    $('nextBtn').addEventListener('click', ()=>activateSlide(slideIdx+1));
+
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); activateSlide(slideIdx-1); }
+      if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' '){ e.preventDefault(); activateSlide(slideIdx+1); }
+      if(e.key === 'Home'){ e.preventDefault(); activateSlide(0); }
+      if(e.key === 'End'){ e.preventDefault(); activateSlide(QUESTIONS.length-1); }
+    });
+
+    // Reset (현재 질문)
     $('resetBtn').addEventListener('click', async ()=>{
       const code = $('resetCode').value || '';
       try{
@@ -158,8 +254,82 @@
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ code })
         });
+        await fetchState();
       } catch {}
     });
+
+    // Init
+    async function loadQuestionsFromServer(){
+      try{
+        const r = await fetch(`/api/questions?ts=${Date.now()}`, { cache: 'no-store' });
+        const j = await r.json();
+        if(j && j.ok && Array.isArray(j.questions) && j.questions.length){
+          QUESTIONS = j.questions;
+          $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
+          $('questionsStatus').textContent = `서버 질문 ${QUESTIONS.length}개 로드됨`;
+          $('questionsStatus').style.color = '';
+          return true;
+        }
+        $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
+        $('questionsStatus').textContent = '서버에 저장된 질문이 없어 기본값을 사용합니다.';
+        $('questionsStatus').style.color = '';
+        return false;
+      } catch {
+        $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
+        $('questionsStatus').textContent = '서버 질문 로드 실패(기본값 사용)';
+        $('questionsStatus').style.color = '';
+        return false;
+      }
+    }
+
+    $('loadQuestionsBtn').addEventListener('click', loadQuestionsFromServer);
+
+    $('saveQuestionsBtn').addEventListener('click', async ()=>{
+      const adminCode = $('adminCode').value || '';
+      if(!adminCode){
+        $('questionsStatus').textContent = '관리 코드를 먼저 입력하세요.';
+        $('questionsStatus').style.color = '#E56458';
+        return;
+      }
+      let arr;
+      try{
+        arr = JSON.parse($('questionsJson').value || '[]');
+      } catch {
+        $('questionsStatus').textContent = 'JSON 파싱 실패: 형식을 확인하세요.';
+        $('questionsStatus').style.color = '#E56458';
+        return;
+      }
+
+      try{
+        const r = await fetch('/api/questions', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ adminCode, questions: arr })
+        });
+        const j = await r.json();
+        if(j && j.ok){
+          QUESTIONS = j.questions || QUESTIONS;
+          $('questionsJson').value = JSON.stringify(QUESTIONS, null, 2);
+          $('questionsStatus').textContent = `저장 완료: ${QUESTIONS.length}개`;
+          $('questionsStatus').style.color = '#46A171';
+          // 저장 직후 첫 질문부터 반영
+          slideIdx = clamp(slideIdx, 0, QUESTIONS.length-1);
+          await activateSlide(slideIdx);
+        } else {
+          $('questionsStatus').textContent = `저장 실패: ${j && j.error ? j.error : 'error'}`;
+          $('questionsStatus').style.color = '#E56458';
+        }
+      } catch {
+        $('questionsStatus').textContent = '저장 실패(네트워크)';
+        $('questionsStatus').style.color = '#E56458';
+      }
+    });
+
+    (async function init(){
+      await loadQuestionsFromServer();
+      slideIdx = readIdxFromHash();
+      activateSlide(slideIdx);
+    })();
   </script>
 </body>
 </html>
